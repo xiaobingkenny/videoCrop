@@ -7,8 +7,10 @@ android {
     compileSdkVersion 29
     buildToolsVersion "30.0.1"
 
+//    println "zzh_haha:" + (getLocalProperties("qiniu_app_ida") ?: "hhhh")
+
     defaultConfig {
-        applicationId "com.shijiusui.p.videocrop"
+        applicationId getLocalProperties("qiniu_app_id") ?: "com.shijiusui.p.videocrop"
         minSdkVersion 22
         targetSdkVersion 29
         versionCode 1

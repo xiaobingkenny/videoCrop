@@ -1,3 +1,5 @@
+import java.util.function.BiConsumer
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.4.10"
@@ -14,11 +16,42 @@ buildscript {
     }
 }
 
+Map<Object, Object> local_properties = new HashMap<>();
+ext.local_properties = local_properties
+def getLocalProperties(String key){
+    return getLocalProperties(key, null)
+}
+def getLocalProperties(String key, String defaultValue){
+    Object value = ext.local_properties.get(key)
+    if(value instanceof String){
+        return value
+    }
+    return defaultValue
+}
+def parseLocalProperties(){
+    File file = rootProject.file("local.properties")
+    if(!file.exists()){
+        return
+    }
+
+    InputStream inputStream = file.newDataInputStream()
+    Properties properties = new Properties()
+    properties.load(inputStream)
+
+    properties.forEach(new BiConsumer<Object, Object>() {
+        @Override
+        void accept(Object o, Object o2) {
+            ext.local_properties.put(o, o2)
+        }
+    })
+}
+
 allprojects {
     repositories {
         google()
         jcenter()
     }
+    parseLocalProperties()
 }
 
 task clean(type: Delete) {
