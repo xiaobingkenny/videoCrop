@@ -31,8 +31,11 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     var lastMeasuredWidth : Int = 0
     var lastMeasuredHeight : Int = 0
 
-    var cornerWLength = 0f
-    var cornerHLength = 0f
+    var cornerMaxWLength = 0f
+    var cornerMaxHLength = 0f
+    var cornerMinWLength = 0f
+    var cornerMinHLength = 0f
+
     var minWLength = 0f
     var minHLength = 0f
 
@@ -52,6 +55,10 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         if(aspect <= 0){
             return lastMeasuredWidth < lastMeasuredHeight
         }
+        if(lastMeasuredHeight == 0){
+            // divide by zero
+            return true
+        }
         return lastMeasuredWidth / lastMeasuredHeight < aspect
     }
 
@@ -67,16 +74,14 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             calculateInit()
             calculateLine()
             calculateCorner()
+            calculateMask()
         }
     }
 
     private fun calculateInit(){
         val isBaseWidth = isBaseWidth()
         if(isBaseWidth){
-            // 四个角拖动 暂时一样长
-            cornerWLength = lastMeasuredWidth/6f
-            cornerHLength = cornerWLength
-
+            // 最小值
             minWLength = lastMeasuredWidth / 2f
             if(aspect > 0){
                 minHLength = minWLength / aspect
@@ -84,11 +89,11 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
                 minHLength = minWLength
             }
 
-        }else{
             // 四个角拖动 暂时一样长
-            cornerHLength = lastMeasuredHeight / 6f
-            cornerWLength = cornerHLength
-
+            cornerMaxWLength = lastMeasuredWidth/6f
+            cornerMaxHLength = cornerMaxWLength
+        }else{
+            // 最小值
             minHLength = lastMeasuredHeight / 2f
             if(aspect > 0){
                 minWLength = minHLength * aspect
@@ -96,6 +101,25 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
                 minWLength = minHLength
             }
 
+            // 四个角拖动 暂时一样长
+            cornerMaxHLength = lastMeasuredHeight / 6f
+            cornerMaxWLength = cornerMaxHLength
+        }
+
+        if(true){
+            minWLength = 100f
+            minHLength = 100f
+        }
+
+        cornerMinWLength = minWLength / 3
+        cornerMinHLength = minHLength / 3
+
+        // 修正
+        if(cornerMinWLength > cornerMaxWLength){
+            cornerMinWLength = cornerMaxWLength
+        }
+        if(cornerMinHLength > cornerMaxHLength){
+            cornerMinHLength = cornerMaxHLength
         }
 
         val width: Float
@@ -123,10 +147,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     private val maskRightRect = Rect()
     private val maskBottomRect = Rect()
 
-    override fun onDraw(canvas: Canvas) {
-        paint.color = maskColor
-        paint.style = Paint.Style.FILL
-
+    private fun calculateMask(){
         maskTopRect.left = 0
         maskTopRect.top = 0
         maskTopRect.right = lastMeasuredWidth
@@ -146,20 +167,38 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         maskBottomRect.top = cropRectBottom.toInt()
         maskBottomRect.right = lastMeasuredWidth
         maskBottomRect.bottom = lastMeasuredHeight
+    }
 
+    private fun drawMask(paint: Paint, canvas: Canvas){
+        paint.color = maskColor
+        paint.style = Paint.Style.FILL
 
         canvas.drawRect(maskTopRect, paint)
         canvas.drawRect(maskLeftRect, paint)
         canvas.drawRect(maskRightRect, paint)
         canvas.drawRect(maskBottomRect, paint)
+    }
 
+    private fun drawBorder(paint: Paint, canvas: Canvas){
         paint.strokeWidth = dp1
         paint.color = Color.WHITE
         paint.style = Paint.Style.STROKE
         canvas.drawRect(cropRectLeft, cropRectTop, cropRectRight, cropRectBottom, paint)
+    }
 
-        drawLine(canvas)
-        drawCorner(canvas)
+    private fun drawColor(paint: Paint, canvas: Canvas){
+        paint.color = Color.LTGRAY and 0x33_000000
+        paint.style = Paint.Style.FILL
+        canvas.drawRect(cropRectLeft, cropRectTop, cropRectRight, cropRectBottom, paint)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+
+        drawMask(paint, canvas)
+        drawColor(paint, canvas)
+        drawBorder(paint, canvas)
+        drawLine(paint, canvas)
+        drawCorner(paint, canvas)
     }
 
     private var line1StartX = 0f
@@ -207,12 +246,9 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         line4EndY = line4StartY
     }
 
-    private fun drawLine(canvas: Canvas){
+    private fun drawLine(paint: Paint, canvas: Canvas){
         paint.strokeWidth = 1f
-        paint.color = Color.RED
-
-        // calculateLine()
-
+        paint.color = Color.WHITE // Color.RED
         canvas.drawLine(line1StartX, line1StartY, line1EndX, line1EndY, paint)
         canvas.drawLine(line2StartX, line2StartY, line2EndX, line2EndY, paint)
         canvas.drawLine(line3StartX, line3StartY, line3EndX, line3EndY, paint)
@@ -271,7 +307,19 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     private var rightBottomVLineEndX = 0f
     private var rightBottomVLineEndY = 0f
 
-    private fun calculateCorner(){
+    private fun calculateCorner() {
+        var cornerWLength = (cropRectRight - cropRectLeft) / 3
+        if(cornerWLength < cornerMinWLength){
+            cornerWLength = cornerMinWLength
+        }else if(cornerWLength > cornerMaxWLength){
+            cornerWLength = cornerMaxWLength
+        }
+        var cornerHLength = (cropRectBottom - cropRectTop) / 3
+        if(cornerHLength < cornerMinHLength){
+            cornerHLength = cornerMinHLength
+        }else if(cornerHLength > cornerMaxHLength){
+            cornerHLength = cornerMaxHLength
+        }
 
         leftTopHLineColor = if(isMove || (isTop && !isRight)) activeColor else Color.WHITE
         leftTopHLineStartX = cropRectLeft - halfDp3
@@ -323,12 +371,10 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         rightBottomVLineEndY = cropRectBottom - cornerHLength
     }
 
-    private fun drawCorner(canvas: Canvas){
+    private fun drawCorner(paint: Paint, canvas: Canvas){
         paint.strokeWidth = dp3
 
-        // calculateCorner()
-
-        paint.color = Color.RED //leftTopHLineColor
+        paint.color = leftTopHLineColor
         canvas.drawLine(
             leftTopHLineStartX,
             leftTopHLineStartY,
@@ -337,7 +383,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //leftTopVLineColor
+        paint.color = leftTopVLineColor
         canvas.drawLine(
             leftTopVLineStartX,
             leftTopVLineStartY,
@@ -346,7 +392,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //rightTopHLineColor
+        paint.color = rightTopHLineColor
         canvas.drawLine(
             rightTopHLineStartX,
             rightTopHLineStartY,
@@ -355,7 +401,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //rightTopVLineColor
+        paint.color = rightTopVLineColor
         canvas.drawLine(
             rightTopVLineStartX,
             rightTopVLineStartY,
@@ -364,7 +410,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //leftBottomHLineColor
+        paint.color = leftBottomHLineColor
         canvas.drawLine(
             leftBottomHLineStartX,
             leftBottomHLineStartY,
@@ -373,7 +419,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //leftBottomVLineColor
+        paint.color = leftBottomVLineColor
         canvas.drawLine(
             leftBottomVLineStartX,
             leftBottomVLineStartY,
@@ -382,7 +428,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //rightBottomHLineColor
+        paint.color = rightBottomHLineColor
         canvas.drawLine(
             rightBottomHLineStartX,
             rightBottomHLineStartY,
@@ -391,7 +437,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             paint
         )
 
-        paint.color = Color.RED //rightBottomVLineColor
+        paint.color = rightBottomVLineColor
         canvas.drawLine(
             rightBottomVLineStartX,
             rightBottomVLineStartY,
@@ -431,27 +477,27 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
 //        return x in xRange && y in yRange
 //    }
 
-    var downX = 0f
-    var downY = 0f
+    var lastTouchX = 0f
+    var lastTouchY = 0f
     private fun handleActionDown(event: MotionEvent){
-        downX = event.x
-        downY = event.y
+        lastTouchX = event.x
+        lastTouchY = event.y
 
         val rectOverW = (cropRectRight - cropRectLeft) / 6
         val rectOverH = (cropRectBottom - cropRectTop) / 6
 
         val cropXRange = cropRectLeft..cropRectRight
         val cropYRange = cropRectTop..cropRectBottom
-        if(downX in cropXRange && downY in cropYRange){
-            if(downX <= cropRectLeft + rectOverW){
+        if(lastTouchX in cropXRange && lastTouchY in cropYRange){
+            if(lastTouchX <= cropRectLeft + rectOverW){
                 isLeft = true
-            }else if(downX >= cropRectRight - rectOverW){
+            }else if(lastTouchX >= cropRectRight - rectOverW){
                 isRight = true
             }
 
-            if(downY <= cropRectTop + rectOverH){
+            if(lastTouchY <= cropRectTop + rectOverH){
                 isTop = true
-            }else if(downY >= cropRectBottom - rectOverH){
+            }else if(lastTouchY >= cropRectBottom - rectOverH){
                 isBottom = true
             }
 
@@ -462,16 +508,16 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
 
         val cropOverXRange = (cropRectLeft - rectOverW)..(cropRectRight + rectOverW)
         val cropOverYRange = (cropRectTop - rectOverH)..(cropRectBottom + rectOverH)
-        if(downX in cropOverXRange && downY in cropOverYRange){
-            if(downX <= cropRectLeft){
+        if(lastTouchX in cropOverXRange && lastTouchY in cropOverYRange){
+            if(lastTouchX <= cropRectLeft){
                 isLeft = true
-            } else if(downY >= cropRectRight){
+            } else if(lastTouchY >= cropRectRight){
                 isRight = true
             }
 
-            if(downY <= cropRectTop){
+            if(lastTouchY <= cropRectTop){
                 isTop = true
-            }else if(downY >= cropRectBottom){
+            }else if(lastTouchY >= cropRectBottom){
                 isBottom = true
             }
         }
@@ -481,23 +527,24 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     private fun updateUI(){
         calculateLine()
         calculateCorner()
+        calculateMask()
         invalidate()
     }
 
     private fun handleActionMove(event: MotionEvent){
-        val moveX = event.x
-        val moveY = event.y
+        val currentX = event.x
+        val currentY = event.y
 
-        val slideX = moveX - downX
-        val slideY = moveY - downY
+        val slideX = currentX - lastTouchX
+        val slideY = currentY - lastTouchY
 
         if(isMove){
             // 拖拽模式
             handleMove(slideX, slideY)
 
             updateUI()
-            downX = moveX
-            downY = moveY
+            lastTouchX = currentX
+            lastTouchY = currentY
 
         }else{
             lockSlide(slideX, slideY)
@@ -505,23 +552,23 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             if(isSlideLeft){
                 slideLeft(slideX, slideY)
                 updateUI()
-                downX = moveX
-                downY = moveY
+                lastTouchX = currentX
+                lastTouchY = currentY
             }else if(isSlideRight){
                 slideRight(slideX, slideY)
                 updateUI()
-                downX = moveX
-                downY = moveY
+                lastTouchX = currentX
+                lastTouchY = currentY
             }else if(isSlideTop){
                 slideTop(slideX, slideY)
                 updateUI()
-                downX = moveX
-                downY = moveY
+                lastTouchX = currentX
+                lastTouchY = currentY
             }else if(isSlideBottom){
                 slideBottom(slideX, slideY)
                 updateUI()
-                downX = moveX
-                downY = moveY
+                lastTouchX = currentX
+                lastTouchY = currentY
             }else{
                 // no code
             }
