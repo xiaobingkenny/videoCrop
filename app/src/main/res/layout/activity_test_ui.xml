@@ -9,6 +9,7 @@
         android:src="@mipmap/ic_launcher"/>
 
     <com.shijiusui.p.videocrop.view.CropVideoSquareView
+        android:id="@+id/crop_video"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </FrameLayout>

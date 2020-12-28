@@ -6,6 +6,5 @@ import android.os.Bundle
 class VideoCropActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
     }
 }

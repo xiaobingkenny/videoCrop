@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import kotlin.math.abs
@@ -51,6 +52,11 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     var cropRectTop : Float = 0f
     var cropRectBottom : Float = 0f
 
+    var lastRectLeft : Float = 0f
+    var lastRectRight : Float = 0f
+    var lastRectTop : Float = 0f
+    var lastRectBottom : Float = 0f
+
     private fun isBaseWidth() : Boolean {
         if(aspect <= 0){
             return lastMeasuredWidth < lastMeasuredHeight
@@ -75,7 +81,17 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             calculateLine()
             calculateCorner()
             calculateMask()
+
+            recordRect()
+            onSizeChangedListener?.onSizeChanged(this)
         }
+    }
+
+    private fun recordRect(){
+        lastRectLeft = cropRectLeft
+        lastRectRight = cropRectRight
+        lastRectTop = cropRectTop
+        lastRectBottom = cropRectBottom
     }
 
     private fun calculateInit(){
@@ -935,46 +951,6 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
                 newWidth = fixedHeight * aspect
                 cropRectLeft = fixedRight - newWidth
             }
-
-//            // 计算top or bottom
-//            if(isTop){
-//                cropRectTop = cropRectBottom - newHeight
-//
-//                // 再次修正
-//                if(cropRectTop < 0){
-//                    cropRectTop = 0f
-//                    newHeight = cropRectBottom - cropRectTop
-//
-//                    newWidth = newHeight * aspect
-//                    cropRectLeft = fixedRight - newWidth
-//                }
-//            }else if(isBottom){
-//                cropRectBottom = cropRectTop + newHeight
-//
-//                if(cropRectBottom > lastMeasuredHeight){
-//                    cropRectBottom = lastMeasuredHeight.toFloat()
-//                    newHeight = cropRectBottom - cropRectTop
-//
-//                    newWidth = newHeight * aspect
-//                    cropRectLeft = fixedRight - newWidth
-//                }
-//            }else{
-//                val oldHeight = cropRectBottom - cropRectTop
-//                var t = (newHeight - oldHeight) / 2
-//                if(cropRectTop - t < 0){
-//                    t = cropRectTop
-//                }
-//                if(cropRectBottom + t > lastMeasuredHeight){
-//                    t = lastMeasuredHeight - cropRectBottom
-//                }
-//                cropRectTop -= t
-//                cropRectBottom += t
-//
-//                newHeight = cropRectBottom - cropRectTop
-//
-//                newWidth = newHeight * aspect
-//                cropRectLeft = fixedRight - newWidth
-//            }
         }
     }
 
@@ -1076,6 +1052,21 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         isSlideBottom = false
 
         updateUI()
+
+        if(lastRectLeft.isNotEquals(cropRectLeft) || lastRectRight.isNotEquals(cropRectRight) || lastRectTop.isNotEquals(cropRectTop) || lastRectBottom.isNotEquals(cropRectBottom)) {
+            recordRect()
+            onSizeChangedListener?.onSizeChanged(this)
+        }
     }
+
+    private fun Float.isNotEquals(other : Float) : Boolean {
+        return abs(this - other) > 1e-8
+    }
+
+    public interface OnSizeChangedListener {
+        fun onSizeChanged(view : CropVideoSquareView)
+    }
+
+    var onSizeChangedListener : OnSizeChangedListener? = null
 
 }
