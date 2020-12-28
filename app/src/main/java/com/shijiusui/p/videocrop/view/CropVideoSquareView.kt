@@ -377,7 +377,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         recordIndex(active, L_T_V)
         leftTopVLineColor = if(active) activeColor else Color.WHITE
         leftTopVLineStartX = cropRectLeft
-        leftTopVLineStartY = cropRectTop
+        leftTopVLineStartY = cropRectTop - halfDp3
         leftTopVLineEndX = cropRectLeft
         leftTopVLineEndY = cropRectTop + cornerHLength
 
@@ -393,7 +393,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         recordIndex(active, R_T_V)
         rightTopVLineColor = if(active) activeColor else Color.WHITE
         rightTopVLineStartX = cropRectRight
-        rightTopVLineStartY = cropRectTop
+        rightTopVLineStartY = cropRectTop - halfDp3
         rightTopVLineEndX = cropRectRight
         rightTopVLineEndY = cropRectTop + cornerHLength
 
@@ -410,7 +410,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         recordIndex(active, L_B_V)
         leftBottomVLineColor = if(active) activeColor else Color.WHITE
         leftBottomVLineStartX = cropRectLeft
-        leftBottomVLineStartY = cropRectBottom
+        leftBottomVLineStartY = cropRectBottom + halfDp3
         leftBottomVLineEndX = cropRectLeft
         leftBottomVLineEndY = cropRectBottom - cornerHLength
 
@@ -426,7 +426,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
         recordIndex(active, R_B_V)
         rightBottomVLineColor = if(active) activeColor else Color.WHITE
         rightBottomVLineStartX = cropRectRight
-        rightBottomVLineStartY = cropRectBottom
+        rightBottomVLineStartY = cropRectBottom + halfDp3
         rightBottomVLineEndX = cropRectRight
         rightBottomVLineEndY = cropRectBottom - cornerHLength
     }
