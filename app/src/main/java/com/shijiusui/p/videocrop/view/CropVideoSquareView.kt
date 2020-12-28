@@ -16,7 +16,7 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
 
     private val maskColor : Int = 0xc0_000000.toInt()
 
-    private val activeColor = Color.WHITE //0xFFEE2284
+    private val activeColor : Int = 0xFFEE2284.toInt()
     private var aspect : Float = 1f // w/h 默认-1(不控制比例)
 
 
@@ -307,6 +307,46 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
     private var rightBottomVLineEndX = 0f
     private var rightBottomVLineEndY = 0f
 
+    companion object{
+        // 左上
+        const val L_T_V = 0
+        const val L_T_H = 1
+
+        // 右上
+        const val R_T_H = 2
+        const val R_T_V = 3
+
+        // 右下
+        const val R_B_V = 4
+        const val R_B_H = 5
+
+        // 左下
+        const val L_B_H = 6
+        const val L_B_V = 7
+    }
+
+    private val cornerLayerIndexArray = IntArray(8) // 激活的在前
+    private var cornerLayerCurPtr = 0
+
+    private fun addHead(layerIndex : Int){
+        var cur = cornerLayerCurPtr
+        while(cur > 0){
+            cornerLayerIndexArray[cur] = cornerLayerIndexArray[cur - 1]
+            cur--
+        }
+        cornerLayerIndexArray[0] = layerIndex
+        cornerLayerCurPtr++
+    }
+
+    private fun addTail(layerIndex : Int){
+        cornerLayerIndexArray[cornerLayerCurPtr] = layerIndex
+        cornerLayerCurPtr++
+    }
+
+    private fun recordIndex(active : Boolean, index : Int){
+        if(active) addHead(index) else addTail(index)
+    }
+
     private fun calculateCorner() {
         var cornerWLength = (cropRectRight - cropRectLeft) / 3
         if(cornerWLength < cornerMinWLength){
@@ -321,130 +361,174 @@ class CropVideoSquareView @JvmOverloads constructor(context: Context, attrs: Att
             cornerHLength = cornerMaxHLength
         }
 
-        leftTopHLineColor = if(isMove || (isTop && !isRight)) activeColor else Color.WHITE
+        // 重置
+        cornerLayerIndexArray.fill(-1)
+        cornerLayerCurPtr = 0
+
+        var active = isMove || (isTop && !isRight)
+        recordIndex(active, L_T_H)
+        leftTopHLineColor = if(active) activeColor else Color.WHITE
         leftTopHLineStartX = cropRectLeft - halfDp3
         leftTopHLineStartY = cropRectTop
         leftTopHLineEndX = cropRectLeft + cornerWLength
         leftTopHLineEndY = cropRectTop
 
-        leftTopVLineColor = if(isMove || (isLeft && !isBottom)) activeColor else Color.WHITE
+        active = isMove || (isLeft && !isBottom)
+        recordIndex(active, L_T_V)
+        leftTopVLineColor = if(active) activeColor else Color.WHITE
         leftTopVLineStartX = cropRectLeft
         leftTopVLineStartY = cropRectTop
         leftTopVLineEndX = cropRectLeft
         leftTopVLineEndY = cropRectTop + cornerHLength
 
-        rightTopHLineColor = if(isMove || (isTop && !isLeft)) activeColor else Color.WHITE
+        active = isMove || (isTop && !isLeft)
+        recordIndex(active, R_T_H)
+        rightTopHLineColor = if(active) activeColor else Color.WHITE
         rightTopHLineStartX = cropRectRight + halfDp3
         rightTopHLineStartY = cropRectTop
         rightTopHLineEndX = cropRectRight - cornerWLength
         rightTopHLineEndY = cropRectTop
 
-        rightTopVLineColor = if(isMove || (isRight && !isBottom)) activeColor else Color.WHITE
+        active = isMove || (isRight && !isBottom)
+        recordIndex(active, R_T_V)
+        rightTopVLineColor = if(active) activeColor else Color.WHITE
         rightTopVLineStartX = cropRectRight
         rightTopVLineStartY = cropRectTop
         rightTopVLineEndX = cropRectRight
         rightTopVLineEndY = cropRectTop + cornerHLength
 
         // 左下
-        leftBottomHLineColor = if(isMove || (isBottom && !isRight)) activeColor else Color.WHITE
+        active = isMove || (isBottom && !isRight)
+        recordIndex(active, L_B_H)
+        leftBottomHLineColor = if(active) activeColor else Color.WHITE
         leftBottomHLineStartX = cropRectLeft - halfDp3
         leftBottomHLineStartY = cropRectBottom
         leftBottomHLineEndX = cropRectLeft + cornerWLength
         leftBottomHLineEndY = cropRectBottom
 
-        leftBottomVLineColor = if(isMove || (isLeft && !isTop)) activeColor else Color.WHITE
+        active = isMove || (isLeft && !isTop)
+        recordIndex(active, L_B_V)
+        leftBottomVLineColor = if(active) activeColor else Color.WHITE
         leftBottomVLineStartX = cropRectLeft
         leftBottomVLineStartY = cropRectBottom
         leftBottomVLineEndX = cropRectLeft
         leftBottomVLineEndY = cropRectBottom - cornerHLength
 
-        rightBottomHLineColor = if(isMove || (isBottom && !isLeft)) activeColor else Color.WHITE
+        active = isMove || (isBottom && !isLeft)
+        recordIndex(active, R_B_H)
+        rightBottomHLineColor = if(active) activeColor else Color.WHITE
         rightBottomHLineStartX = cropRectRight + halfDp3
         rightBottomHLineStartY = cropRectBottom
         rightBottomHLineEndX = cropRectRight - cornerWLength
         rightBottomHLineEndY = cropRectBottom
 
-        rightBottomVLineColor = if(isMove || (isRight && !isTop)) activeColor else Color.WHITE
+        active = isMove || (isRight && !isTop)
+        recordIndex(active, R_B_V)
+        rightBottomVLineColor = if(active) activeColor else Color.WHITE
         rightBottomVLineStartX = cropRectRight
         rightBottomVLineStartY = cropRectBottom
         rightBottomVLineEndX = cropRectRight
         rightBottomVLineEndY = cropRectBottom - cornerHLength
     }
 
+    private fun drawCorner(canvas: Canvas, cornerIndex : Int){
+        when(cornerIndex){
+            L_T_H -> {
+                paint.color = leftTopHLineColor
+                canvas.drawLine(
+                    leftTopHLineStartX,
+                    leftTopHLineStartY,
+                    leftTopHLineEndX,
+                    leftTopHLineEndY,
+                    paint
+                )
+            }
+
+            L_T_V -> {
+                paint.color = leftTopVLineColor
+                canvas.drawLine(
+                    leftTopVLineStartX,
+                    leftTopVLineStartY,
+                    leftTopVLineEndX,
+                    leftTopVLineEndY,
+                    paint
+                )
+            }
+
+            R_T_H -> {
+                paint.color = rightTopHLineColor
+                canvas.drawLine(
+                    rightTopHLineStartX,
+                    rightTopHLineStartY,
+                    rightTopHLineEndX,
+                    rightTopHLineEndY,
+                    paint
+                )
+            }
+
+            R_T_V -> {
+                paint.color = rightTopVLineColor
+                canvas.drawLine(
+                    rightTopVLineStartX,
+                    rightTopVLineStartY,
+                    rightTopVLineEndX,
+                    rightTopVLineEndY,
+                    paint
+                )
+            }
+
+            L_B_H -> {
+                paint.color = leftBottomHLineColor
+                canvas.drawLine(
+                    leftBottomHLineStartX,
+                    leftBottomHLineStartY,
+                    leftBottomHLineEndX,
+                    leftBottomHLineEndY,
+                    paint
+                )
+            }
+
+            L_B_V -> {
+                paint.color = leftBottomVLineColor
+                canvas.drawLine(
+                    leftBottomVLineStartX,
+                    leftBottomVLineStartY,
+                    leftBottomVLineEndX,
+                    leftBottomVLineEndY,
+                    paint
+                )
+            }
+
+            R_B_H -> {
+                paint.color = rightBottomHLineColor
+                canvas.drawLine(
+                    rightBottomHLineStartX,
+                    rightBottomHLineStartY,
+                    rightBottomHLineEndX,
+                    rightBottomHLineEndY,
+                    paint
+                )
+            }
+
+            R_B_V -> {
+                paint.color = rightBottomVLineColor
+                canvas.drawLine(
+                    rightBottomVLineStartX,
+                    rightBottomVLineStartY,
+                    rightBottomVLineEndX,
+                    rightBottomVLineEndY,
+                    paint
+                )
+            }
+        }
+    }
+
     private fun drawCorner(paint: Paint, canvas: Canvas){
         paint.strokeWidth = dp3
 
-        paint.color = leftTopHLineColor
-        canvas.drawLine(
-            leftTopHLineStartX,
-            leftTopHLineStartY,
-            leftTopHLineEndX,
-            leftTopHLineEndY,
-            paint
-        )
-
-        paint.color = leftTopVLineColor
-        canvas.drawLine(
-            leftTopVLineStartX,
-            leftTopVLineStartY,
-            leftTopVLineEndX,
-            leftTopVLineEndY,
-            paint
-        )
-
-        paint.color = rightTopHLineColor
-        canvas.drawLine(
-            rightTopHLineStartX,
-            rightTopHLineStartY,
-            rightTopHLineEndX,
-            rightTopHLineEndY,
-            paint
-        )
-
-        paint.color = rightTopVLineColor
-        canvas.drawLine(
-            rightTopVLineStartX,
-            rightTopVLineStartY,
-            rightTopVLineEndX,
-            rightTopVLineEndY,
-            paint
-        )
-
-        paint.color = leftBottomHLineColor
-        canvas.drawLine(
-            leftBottomHLineStartX,
-            leftBottomHLineStartY,
-            leftBottomHLineEndX,
-            leftBottomHLineEndY,
-            paint
-        )
-
-        paint.color = leftBottomVLineColor
-        canvas.drawLine(
-            leftBottomVLineStartX,
-            leftBottomVLineStartY,
-            leftBottomVLineEndX,
-            leftBottomVLineEndY,
-            paint
-        )
-
-        paint.color = rightBottomHLineColor
-        canvas.drawLine(
-            rightBottomHLineStartX,
-            rightBottomHLineStartY,
-            rightBottomHLineEndX,
-            rightBottomHLineEndY,
-            paint
-        )
-
-        paint.color = rightBottomVLineColor
-        canvas.drawLine(
-            rightBottomVLineStartX,
-            rightBottomVLineStartY,
-            rightBottomVLineEndX,
-            rightBottomVLineEndY,
-            paint
-        )
+        for(index in (7 downTo 0)){
+            drawCorner(canvas, cornerLayerIndexArray[index])
+        }
     }
 
     // 拖动模式
