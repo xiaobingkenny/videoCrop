@@ -1,9 +1,9 @@
-package com.shijiusui.p.videocrop
+package com.shijiusui.p.videocrop.test
 
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
+import com.shijiusui.p.videocrop.R
 import com.shijiusui.p.videocrop.view.CropVideoSquareView
 
 class TestUIActivity : Activity() {

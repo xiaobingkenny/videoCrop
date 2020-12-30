@@ -1,4 +1,4 @@
-package com.shijiusui.p.videocrop
+package com.shijiusui.p.videocrop.test
 
 class Test(name: String) {
     var name: String? = null
