@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    tools:parentTag="android.widget.FrameLayout"
+    >
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/activity_video_trim_frame_list"
+        android:layout_width="wrap_content"
+        android:layout_height="62dp"
+        android:layout_gravity="center_vertical" />
+
+    <LinearLayout
+        android:id="@+id/activity_video_trim_hand_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingLeft="24dp">
+
+        <LinearLayout
+            android:layout_width="15dp"
+            android:layout_height="66dp"
+            android:background="@drawable/shape_rect_corners_3_face15_left"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:background="@color/white" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="1.5dp"
+                android:background="@color/white" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="1.5dp"
+                android:background="@color/white" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/activity_video_trim_line_top"
+        android:layout_width="match_parent"
+        android:layout_height="1.5dp"
+        android:layout_marginLeft="39dp"
+        android:layout_marginRight="39dp"
+        android:layout_marginTop="7dp"
+        android:background="@color/main_btn_color_normal" />
+
+    <View
+        android:id="@+id/activity_video_trim_line_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="1.5dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="7dp"
+        android:layout_marginLeft="39dp"
+        android:layout_marginRight="39dp"
+        android:background="@color/main_btn_color_normal" />
+
+    <LinearLayout
+        android:id="@+id/activity_video_trim_hand_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|right"
+        android:paddingRight="24dp">
+
+        <LinearLayout
+            android:layout_width="15dp"
+            android:layout_height="66dp"
+            android:background="@drawable/shape_rect_corners_3_face15_right"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:background="@color/white" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="1.5dp"
+                android:background="@color/white" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="25dp"
+                android:layout_marginLeft="1.5dp"
+                android:background="@color/white" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/activity_video_trim_line_progress"
+        android:layout_width="15dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="39dp"
+        android:paddingLeft="1dp">
+
+        <View
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/shape_rect_corners_3_white" />
+    </LinearLayout>
+</merge>

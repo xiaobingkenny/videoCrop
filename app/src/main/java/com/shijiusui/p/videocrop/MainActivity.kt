@@ -8,6 +8,7 @@ import android.view.View
 import com.bilibili.boxing.Boxing
 import com.bilibili.boxing.model.config.BoxingConfig
 import com.shijiusui.p.videocrop.test.TestPlayerActivity
+import com.shijiusui.p.videocrop.test.TestUIActivity
 
 class MainActivity : Activity() {
 
@@ -37,8 +38,12 @@ class MainActivity : Activity() {
                 Log.w("zzh", "onActivityResult path: $path")
 
                 path?.apply {
-                    val intent = Intent(this@MainActivity, TestPlayerActivity::class.java)
-                    intent.putExtra(TestPlayerActivity.KEY_PATH, path)
+//                    val intent = Intent(this@MainActivity, TestPlayerActivity::class.java)
+//                    intent.putExtra(TestPlayerActivity.KEY_PATH, path)
+//                    startActivity(intent)
+
+                    val intent = Intent(this@MainActivity, TestUIActivity::class.java)
+                    intent.putExtra(TestUIActivity.KEY_PATH, path)
                     startActivity(intent)
                 }
 
